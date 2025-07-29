@@ -48,7 +48,14 @@ with st.sidebar:
         st.error(f"Error accessing S3 bucket: {e}")
         image_filenames = []
 
-    selected_image = st.selectbox('Select Image Filename from S3:', image_filenames) if image_filenames else ""
+    # selected_image = st.selectbox('Select Image Filename from S3:', image_filenames) if image_filenames else ""
+    # Set the default value in the selectbox to '00052AAF-AE51-4918-A307-4C35480299F0.jpg' if it's available
+    default_image = '00052AAF-AE51-4918-A307-4C35480299F0.jpg'
+    selected_image = st.selectbox(
+        'Select Image Filename from S3:', 
+        image_filenames, 
+        index=image_filenames.index(default_image) if default_image in image_filenames else 0
+    )
     uploaded_file = st.file_uploader("Or Upload a Document (Image Only)", type=["jpg", "jpeg", "png"])
 
 # Main content area
