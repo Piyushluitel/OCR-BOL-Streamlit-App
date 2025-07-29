@@ -6,7 +6,6 @@ import json
 import logging
 from datetime import datetime
 from try2 import extract_summary_fields, extract_line_items
-import pdf2image  # For PDF to image conversion
 
 # Initialize AWS
 aws_access_key_id = st.secrets["AWS_ACCESS_KEY_ID"]
@@ -28,31 +27,23 @@ if not logger.handlers:
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
 
-# Streamlit UI
-st.title("Document OCR Processing using Amazon Textract")
-s3_bucket = st.text_input('Enter S3 Bucket Name:', 'fp-prod-s3')
+# Streamlit UI with enhanced layout
+st.set_page_config(page_title="Document OCR with Textract", page_icon=":page_facing_up:", layout="wide")
 
-def load_s3_filenames(file_path="s3_filenames.txt"):
-    try:
-        with open(file_path, "r") as f:
-            return [line.strip() for line in f if line.strip()]
-    except FileNotFoundError:
-        st.error(f"File {file_path} not found.")
-        return []
+# Sidebar for input fields
+with st.sidebar:
+    st.title("OCR Document Processing")
+    s3_bucket = st.text_input('Enter S3 Bucket Name:', 'fp-prod-s3')
+    image_filenames = load_s3_filenames()
+    selected_image = st.selectbox('Select Image Filename from S3:', image_filenames) if image_filenames else ""
+    uploaded_file = st.file_uploader("Or Upload a Document (Image Only)", type=["jpg", "jpeg", "png"])
 
-# Load image files from S3
-image_filenames = load_s3_filenames()
-selected_image = st.selectbox('Select Image Filename from S3:', image_filenames) if image_filenames else ""
-
-# Function to handle PDF upload and conversion to image
-def convert_pdf_to_image(pdf_file):
-    try:
-        images = pdf2image.convert_from_path(pdf_file)
-        # Convert the first page to an image (can be adjusted if needed)
-        return images[0]  
-    except Exception as e:
-        st.error(f"Error in PDF conversion: {e}")
-        return None
+# Main content area
+st.title("Document OCR Processing with Amazon Textract")
+st.markdown("""
+    This app allows you to process documents (images) using Amazon Textract. You can either select an image from the S3 bucket 
+    or upload your own image for text extraction. Once processed, the extracted data will be displayed.
+""")
 
 # Function to process image and extract data using Textract
 def process_image_and_extract_data(bucket, key_or_image):
@@ -101,70 +92,70 @@ def process_image_and_extract_data(bucket, key_or_image):
         st.error(f"Error: {e}")
         return None, [], [], [], {}
 
-# File upload handling
-uploaded_file = st.file_uploader("Upload a document (PDF or Image)", type=["pdf", "jpg", "jpeg", "png"])
+# Displaying results and UI enhancements
+def display_results(img, lines, extracted):
+    st.image(img, caption="Uploaded Document", use_container_width=True)
 
-# Option to select an image from S3
+    # Popover-style comparison with wider box
+    with st.expander("🔍 Compare Extracted Data"):
+        col1, col2 = st.columns([1.5, 2.5])  # Wider column for extracted data
+
+        with col1:
+            st.subheader("Extracting Text Line by Line")
+            st.markdown(
+                "<div style='height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>"
+                + "<br>".join(lines)
+                + "</div>",
+                unsafe_allow_html=True
+            )
+
+        with col2:
+            st.subheader("Structured JSON using AnalyzeExpense")
+            st.code(json.dumps(extracted, indent=4), language="json")
+
+# Processing section
 if uploaded_file:
-    st.write("Processing uploaded file...")
+    st.write("Processing uploaded image...")
 
-    # If uploaded file is a PDF, convert it to image
-    if uploaded_file.type == "application/pdf":
-        image_from_pdf = convert_pdf_to_image(uploaded_file)
-        if image_from_pdf:
-            st.image(image_from_pdf, caption="Converted PDF Page", use_container_width=True)
-            st.write("PDF conversion successful. Now extracting text...")
-
-            # Process the PDF as an image in the same way
-            img, lines, _, _, extracted = process_image_and_extract_data(s3_bucket, uploaded_file.name)
-    else:
-        st.write("Processing Image...")
-        img, lines, _, _, extracted = process_image_and_extract_data(s3_bucket, uploaded_file.name)
-
-    if img:
-        st.image(img, caption="Uploaded Document", use_container_width=True)
-
-        # Popover-style comparison
-        with st.popover("🔍 Compare Extracted Data"):
-            col1, col2 = st.columns([1.2, 1.8])
-
-            with col1:
-                st.subheader("Extracting Text Line by Line")
-                st.markdown(
-                    "<div style='height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>"
-                    + "<br>".join(lines)
-                    + "</div>",
-                    unsafe_allow_html=True
-                )
-
-            with col2:
-                st.subheader("Structured JSON using AnalyzeExpense")
-                st.code(json.dumps(extracted, indent=4), language="json")
-    
-# When selecting an image from S3
-elif selected_image:
-    if st.button('Process Document'):
-        img, lines, _, _, extracted = process_image_and_extract_data(s3_bucket, selected_image)
+    with st.spinner("Processing the document, please wait..."):
+        img, lines, _, _, extracted = process_image_and_extract_data(s3_bucket, uploaded_file)
 
         if img:
-            st.image(img, caption="Uploaded Document", use_container_width=True)
-
-            # Popover-style comparison
-            with st.popover("🔍 Compare Extracted Data"):
-                col1, col2 = st.columns([1.2, 1.8])
-
-                with col1:
-                    st.subheader("Extracting Text Line by Line")
-                    st.markdown(
-                        "<div style='height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>"
-                        + "<br>".join(lines)
-                        + "</div>",
-                        unsafe_allow_html=True
-                    )
-
-                with col2:
-                    st.subheader("Structured JSON using AnalyzeExpense")
-                    st.code(json.dumps(extracted, indent=4), language="json")
-
+            display_results(img, lines, extracted)
 else:
-    st.write("Select an image from the S3 bucket or upload a document to process.")
+    if selected_image:
+        if st.button('Process Document'):
+            with st.spinner("Processing the selected document, please wait..."):
+                img, lines, _, _, extracted = process_image_and_extract_data(s3_bucket, selected_image)
+
+                if img:
+                    display_results(img, lines, extracted)
+
+    else:
+        st.write("Please select or upload an image to process.")
+
+# Custom CSS for better appearance
+st.markdown("""
+    <style>
+        .sidebar .sidebar-content {
+            background-color: #f0f2f6;
+            padding: 20px;
+        }
+        .stButton > button {
+            background-color: #4CAF50;
+            color: white;
+            border-radius: 10px;
+            height: 50px;
+            width: 200px;
+        }
+        .stButton > button:hover {
+            background-color: #45a049;
+        }
+        h1, h2 {
+            color: #2c3e50;
+        }
+        .stExpander > div {
+            background-color: #ecf0f1;
+        }
+    </style>
+""", unsafe_allow_html=True)
