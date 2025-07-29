@@ -1,3 +1,5 @@
-streamlit
 boto3
-PIL
+Pillow
+streamlit==1.47.1
+pandas==2.3.1
+numpy==2.3.2
