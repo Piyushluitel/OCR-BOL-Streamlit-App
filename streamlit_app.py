@@ -34,7 +34,19 @@ st.set_page_config(page_title="Document OCR with Textract", page_icon=":page_fac
 with st.sidebar:
     st.title("OCR Document Processing")
     s3_bucket = st.text_input('Enter S3 Bucket Name:', 'fp-prod-s3')
-    image_filenames = load_s3_filenames()
+
+    # Directly list image files from the selected S3 bucket
+    s3 = boto3.client('s3')
+    try:
+        s3_objects = s3.list_objects_v2(Bucket=s3_bucket)
+        if 'Contents' in s3_objects:
+            image_filenames = [obj['Key'] for obj in s3_objects['Contents'] if obj['Key'].lower().endswith(('.jpg', '.jpeg', '.png'))]
+        else:
+            image_filenames = []
+    except Exception as e:
+        st.error(f"Error accessing S3 bucket: {e}")
+        image_filenames = []
+
     selected_image = st.selectbox('Select Image Filename from S3:', image_filenames) if image_filenames else ""
     uploaded_file = st.file_uploader("Or Upload a Document (Image Only)", type=["jpg", "jpeg", "png"])
 
