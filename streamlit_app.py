@@ -6,6 +6,7 @@ import json
 import logging
 from datetime import datetime
 from try2 import extract_summary_fields, extract_line_items
+import time
 
 # Initialize AWS
 aws_access_key_id = st.secrets["AWS_ACCESS_KEY_ID"]
@@ -48,10 +49,10 @@ with st.sidebar:
         image_filenames = []
 
     selected_image = st.selectbox('Select Image Filename from S3:', image_filenames) if image_filenames else ""
-    uploaded_file = st.file_uploader("Or Upload an Image", type=["jpg", "jpeg", "png"])
+    uploaded_file = st.file_uploader("Or Upload a Document (Image Only)", type=["jpg", "jpeg", "png"])
 
 # Main content area
-st.title(" OCR Processing ON Bill of Lading images with Amazon Textract")
+st.title("Document OCR Processing with Amazon Textract")
 st.markdown("""
     This app allows you to process documents (images) using Amazon Textract. You can either select an image from the S3 bucket 
     or upload your own image for text extraction. Once processed, the extracted data will be displayed.
@@ -109,21 +110,20 @@ def display_results(img, lines, extracted):
     st.image(img, caption="Uploaded Document", use_container_width=True)
 
     # Popover-style comparison with wider box
-    with st.expander("🔍 Compare Extracted Data"):
-        col1, col2 = st.columns([1.5, 2.5])  # Wider column for extracted data
+    col1, col2 = st.columns([1.5, 2.5])  # Wider column for extracted data
 
-        with col1:
-            st.subheader("Extracting Text Line by Line")
-            st.markdown(
-                "<div style='height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>"
-                + "<br>".join(lines)
-                + "</div>",
-                unsafe_allow_html=True
-            )
+    with col1:
+        st.subheader("Extracting Text Line by Line")
+        st.markdown(
+            "<div style='height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>"
+            + "<br>".join(lines)
+            + "</div>",
+            unsafe_allow_html=True
+        )
 
-        with col2:
-            st.subheader("Structured JSON using AnalyzeExpense")
-            st.code(json.dumps(extracted, indent=4), language="json")
+    with col2:
+        st.subheader("Structured JSON using AnalyzeExpense")
+        st.code(json.dumps(extracted, indent=4), language="json")
 
 # Processing section
 if uploaded_file:
@@ -136,8 +136,9 @@ if uploaded_file:
             display_results(img, lines, extracted)
 else:
     if selected_image:
-        if st.button('Process Document'):
-            with st.spinner("Processing the selected document, please wait..."):
+        if st.button('See Extracted Results'):
+            with st.spinner("Extracting and parsing... please wait..."):
+                time.sleep(3)  # Simulate a delay for processing (3-4 seconds)
                 img, lines, _, _, extracted = process_image_and_extract_data(s3_bucket, selected_image)
 
                 if img:
