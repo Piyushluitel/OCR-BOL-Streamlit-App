@@ -131,11 +131,11 @@ from try2 import extract_summary_fields, extract_line_items
 # Set up Textract client
 # Access AWS credentials from Streamlit secrets
 # Use the credentials to create a session
-aws_access_key_id = st.secrets["aws"]["aws_access_key_id"]
-aws_secret_access_key = st.secrets["aws"]["aws_secret_access_key"]
+aws_access_key_id = st.secrets["aws"]["AWS_ACCESS_KEY_ID"]
+aws_secret_access_key = st.secrets["aws"]["AWS_SECRET_ACCESS_KEY"]
 session = boto3.Session(
-    aws_access_key_id=AWS_ACCESS_KEY_ID,
-    aws_secret_access_key=AWS_SECRET_ACCESS_KEY 
+    aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key 
 )
 textract = session.client('textract', region_name='us-east-1')
 # Configure logger once
