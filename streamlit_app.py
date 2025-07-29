@@ -6,6 +6,7 @@ import json
 import logging
 from datetime import datetime
 from try2 import extract_summary_fields, extract_line_items
+import pdf2image  # For PDF to image conversion
 
 # Initialize AWS
 aws_access_key_id = st.secrets["AWS_ACCESS_KEY_ID"]
@@ -42,6 +43,16 @@ def load_s3_filenames(file_path="s3_filenames.txt"):
 # Load image files from S3
 image_filenames = load_s3_filenames()
 selected_image = st.selectbox('Select Image Filename from S3:', image_filenames) if image_filenames else ""
+
+# Function to handle PDF upload and conversion to image
+def convert_pdf_to_image(pdf_file):
+    try:
+        images = pdf2image.convert_from_path(pdf_file)
+        # Convert the first page to an image (can be adjusted if needed)
+        return images[0]  
+    except Exception as e:
+        st.error(f"Error in PDF conversion: {e}")
+        return None
 
 # Function to process image and extract data using Textract
 def process_image_and_extract_data(bucket, key_or_image):
@@ -91,15 +102,25 @@ def process_image_and_extract_data(bucket, key_or_image):
         return None, [], [], [], {}
 
 # File upload handling
-uploaded_file = st.file_uploader("Upload a document (Image only)", type=["jpg", "jpeg", "png"])
+uploaded_file = st.file_uploader("Upload a document (PDF or Image)", type=["pdf", "jpg", "jpeg", "png"])
 
 # Option to select an image from S3
 if uploaded_file:
-    st.write("Processing uploaded image...")
+    st.write("Processing uploaded file...")
 
-    # Process the uploaded image
-    img, lines, _, _, extracted = process_image_and_extract_data(s3_bucket, uploaded_file)
-    
+    # If uploaded file is a PDF, convert it to image
+    if uploaded_file.type == "application/pdf":
+        image_from_pdf = convert_pdf_to_image(uploaded_file)
+        if image_from_pdf:
+            st.image(image_from_pdf, caption="Converted PDF Page", use_container_width=True)
+            st.write("PDF conversion successful. Now extracting text...")
+
+            # Process the PDF as an image in the same way
+            img, lines, _, _, extracted = process_image_and_extract_data(s3_bucket, uploaded_file.name)
+    else:
+        st.write("Processing Image...")
+        img, lines, _, _, extracted = process_image_and_extract_data(s3_bucket, uploaded_file.name)
+
     if img:
         st.image(img, caption="Uploaded Document", use_container_width=True)
 
@@ -144,5 +165,6 @@ elif selected_image:
                 with col2:
                     st.subheader("Structured JSON using AnalyzeExpense")
                     st.code(json.dumps(extracted, indent=4), language="json")
-    else:
-        st.write("Select an image from the S3 bucket or upload a document to process.")
+
+else:
+    st.write("Select an image from the S3 bucket or upload a document to process.")
