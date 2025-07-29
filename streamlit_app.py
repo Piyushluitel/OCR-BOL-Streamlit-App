@@ -48,10 +48,10 @@ with st.sidebar:
         image_filenames = []
 
     selected_image = st.selectbox('Select Image Filename from S3:', image_filenames) if image_filenames else ""
-    uploaded_file = st.file_uploader("Or Upload a Document (Image Only)", type=["jpg", "jpeg", "png"])
+    uploaded_file = st.file_uploader("Or Upload an Image", type=["jpg", "jpeg", "png"])
 
 # Main content area
-st.title("Document OCR Processing with Amazon Textract")
+st.title(" OCR Processing ON Bill of Lading images with Amazon Textract")
 st.markdown("""
     This app allows you to process documents (images) using Amazon Textract. You can either select an image from the S3 bucket 
     or upload your own image for text extraction. Once processed, the extracted data will be displayed.
