@@ -4468,3 +4468,143 @@ Extracted JSON:
     "LOAD SPOT": "01",
     "products": []
 }
+2025-07-29 11:26:20,800 - INFO - 
+
+################################################################################
+2025-07-29 11:26:20,800 - INFO - Processing file: 002ADEF0-5D35-4951-80CC-7A5253F80A23.jpg
+2025-07-29 11:26:48,061 - INFO - Extracted 22 summary fields.
+2025-07-29 11:26:48,061 - INFO - Extracted 0 line items.
+2025-07-29 11:27:33,408 - INFO - 
+Extracted Text Lines:
+2025-07-29 11:27:33,408 - INFO - 15
+2025-07-29 11:27:33,408 - INFO - RECEIVED, the STRAIGHT carrier property (the word described Subject carrier to below, BILL the being classifications understood in apparent otherwise OF throughout LADING - and good to tariffs deliver order, in this to except effect another contract as on SHORT FORM - ORIGINAL- as meaning REFORM-ORIGINAL- any FORM - ORIGINAL - person or corporation of contents in of NOTNEGOTIABLE
+2025-07-29 11:27:33,408 - INFO - 20
+2025-07-29 11:27:33,408 - INFO - 30
+2025-07-29 11:27:33,408 - INFO - said destination. if on its route, each time interested carrier on the route to said destination. It is a ANDENEGOTIABLE ANDENEGOTIABLE INDENEGOTIABLE NOTNEGOTIABLE
+2025-07-29 11:27:33,408 - INFO - 20
+2025-07-29 11:27:33,409 - INFO - classification at the of said Uniform route hereby Domestic to destination, certifies Straight that and he Bill as is to of familiar Lading carrier party with shipment. set at all forth any the (1) terms in Uniform and conditions Freight in all or of Classifications any the of said said bill property, of in lading, effect that on including every the date service those agreed, as to cach if this is a rail hereinderstershipment.com or THE in to usual over below all OR I
+2025-07-29 11:27:33,409 - INFO - or tariff if this is a motor
+2025-07-29 11:27:33,409 - INFO - transportation Carrier Shipper certifies of (a) this the shipment, cargo tank and supplied the said for terms this conform and shipment conditions the is descriptions a are proper hereby container of agreed and to by this is the properly document; shipper placarded and accepted and prepared for himself on the for back and the transportation his thereof, assigns. set forth in the classification the or applicable tariff which mount way governs carrier M
+2025-07-29 11:27:33,409 - INFO - that rules the and commodities regulations of included the Department in this shipment of Transportation to or other governmental described same in agencies accordance on or authority (c) having that such jurisdiction description over conforms this shipment; to the (d) that the as commodity described by the shipper; the
+2025-07-29 11:27:33,409 - INFO - visibly applicable marked provisions with appropriate of said rules placards and regulations. for the commodities herein with said rules and regulations; and (e) that Trucker has in cargo all respects tank supplied otherwise for as (b) all
+2025-07-29 11:27:33,409 - INFO - The Subject carrier to Section shall not 7 of make conditions delivery of of applicable this Shipment bill-of-lading without payment if shipment of freight is to be and delivered all other to lawful the consignee charges. without recourse on the consignor, the consignor shall sign the following statement:
+2025-07-29 11:27:33,409 - INFO - Kinder Morgan EPA Registration # 4089
+2025-07-29 11:27:33,409 - INFO - Reformulated "RFG" Gasoline contains detergent additive.
+2025-07-29 11:27:33,409 - INFO - The following statement applies from 5/1 - 9/15 of each year for all reformulated gasoline products:
+2025-07-29 11:27:33,409 - INFO - Reformulated "RFG Summer" Gasoline. The reid vapor pressure "RVP" does not exceed 7.4 psi.
+2025-07-29 11:27:33,409 - INFO - The following statement DOES NOT apply from 9/16 - 5/1 of each year for all reformulated gasoline products:
+2025-07-29 11:27:33,410 - INFO - Reformulated "RFG Winter" Gasoline. The reid vapor pressure "RVP" does not exceed 7.4 psi.
+2025-07-29 11:27:33,410 - INFO - The following statements applies to diesel products labeled TXLED:
+2025-07-29 11:27:33,410 - INFO - This product is Texas low emission diesel and may be used as fuel for diesel engines in any Texas county requiring the use of low emission diesel fuel.
+2025-07-29 11:27:33,410 - INFO - Dyed diesel for nontaxable use only, penalty for taxable use.
+2025-07-29 11:27:33,410 - INFO - HAZARD WARNINGS
+2025-07-29 11:27:33,410 - INFO - GASOLINES: DANGER: Extremely flammable. May cause skin and respiratory tract irritation. May cause serious or fatal lung damage. Contains benzene and ethyl benzene. May cause cancer,
+2025-07-29 11:27:33,410 - INFO - blood related disorders, and nervous system damage. Vapors may cause dizziness or suffocation. Harmful or fatal if swallowed
+2025-07-29 11:27:33,410 - INFO - LIGHT FUEL OILS: CAUTION: Combustible liquid and vapor. May cause skin and respiratory tract irritation, dizziness, nausea, loss of consciousness. May cause cancer. May cause reproductive
+2025-07-29 11:27:33,410 - INFO - effects. May cause serious or fatal lung damage. Harmful or fatal if swallowed.
+2025-07-29 11:27:33,410 - INFO - DENATURED FUEL ETHANOL: DANGER: Highly flammable. May cause skin irritation. May cause gastrointestinal irritation with nausea, vomiting and diarrhea if ingested. May cause systemic
+2025-07-29 11:27:33,410 - INFO - toxicity with acidosis. May cause central nervous system depression, and possible death due to respiratory failure. Harmful or fatal if swallowed.
+2025-07-29 11:27:33,410 - INFO - This is to certify that the above-named materials are properly classified, described,
+2025-07-29 11:27:33,411 - INFO - packaged, marked, and labeled and are in proper condition for transportation according
+2025-07-29 11:27:33,411 - INFO - Carrier certifies that the cargo tank supplied for this shipment is a proper container for the transportation of this commodity. If this shipment moves, in other than shipper's vehicle,
+2025-07-29 11:27:33,411 - INFO - the terms will be those (a) of the contract between shipper and carner or (b) the terms of the lawfully applicable tariffs in the carrier as a common carrier. *If the shipment moves
+2025-07-29 11:27:33,411 - INFO - to the applicable regulations of the Department of Transportation.
+2025-07-29 11:27:33,411 - INFO - between two ports by a carrier by water, the law requires that the bill of lading shall state whether it is a carrier's or shipper's weight.
+2025-07-29 11:27:33,411 - INFO - NOTE Where the rate is dependent on value, shippers are required to state specifically in writing the agreed or declared value or the property. The agreed or declared value of the
+2025-07-29 11:27:33,411 - INFO - property is hereby specifically stated by the shipper to be not exceeding
+2025-07-29 11:27:33,411 - INFO - per
+2025-07-29 11:27:33,411 - INFO - RECEIVED AT DESTINATION IN GOOD CONDITION
+2025-07-29 11:27:33,411 - INFO - 5499
+2025-07-29 11:27:33,411 - INFO - (CARRIER NAME)
+2025-07-29 11:27:33,411 - INFO - (DRIVER SIGNATURE)
+2025-07-29 11:27:33,411 - INFO - (SIGNATURE OF RECEIVING AGENT)
+2025-07-29 11:27:33,411 - INFO - BILL OF LADING #
+2025-07-29 11:27:33,412 - INFO - 4133206
+2025-07-29 11:27:33,412 - INFO - DATE
+2025-07-29 11:27:33,412 - INFO - 05/16/25
+2025-07-29 11:27:33,412 - INFO - TIME
+2025-07-29 11:27:33,412 - INFO - 15:25
+2025-07-29 11:27:33,412 - INFO - CUSTOMER #
+2025-07-29 11:27:33,412 - INFO - 49 001 0107
+2025-07-29 11:27:33,412 - INFO - SOLD TO: (PERMANENT MAILING ADDRESS ONLY)
+2025-07-29 11:27:33,412 - INFO - SAME AS SOLD TO
+2025-07-29 11:27:33,412 - INFO - UNLESS INDICATED HERE
+2025-07-29 11:27:33,412 - INFO - CONSIGNED TO
+2025-07-29 11:27:33,412 - INFO - CONSIGNOR
+2025-07-29 11:27:33,412 - INFO - US VENTURE INC-WHITENER
+2025-07-29 11:27:33,412 - INFO - EMERGENCY NUMBER:
+2025-07-29 11:27:33,412 - INFO - VARIOUS, TX 77506
+2025-07-29 11:27:33,412 - INFO - ExxonMobil
+2025-07-29 11:27:33,413 - INFO - (800) 424-9300
+2025-07-29 11:27:33,413 - INFO - Oil Corporation
+2025-07-29 11:27:33,413 - INFO - PO#
+2025-07-29 11:27:33,413 - INFO - 22777 Springwoo
+2025-07-29 11:27:33,413 - INFO - KM LIQUIDS TERMINALS LLC
+2025-07-29 11:27:33,413 - INFO - Spring, TX 77389
+2025-07-29 11:27:33,413 - INFO - CCN 12467
+2025-07-29 11:27:33,413 - INFO - CARRIER CODE
+2025-07-29 11:27:33,413 - INFO - CARRIER NAME
+2025-07-29 11:27:33,413 - INFO - 2300
+2025-07-29 11:27:33,413 - INFO - WHITENER ENTERPRISES INC.
+2025-07-29 11:27:33,413 - INFO - DRIVER NAME
+2025-07-29 11:27:33,413 - INFO - GREGORY POLK-DUNHAM
+2025-07-29 11:27:33,413 - INFO - TRAILER # 59
+2025-07-29 11:27:33,413 - INFO - SHIPPED FROM Kinder Morgan - Pasadena - JSTR
+2025-07-29 11:27:33,413 - INFO - SHIPPEDTX ST
+2025-07-29 11:27:33,413 - INFO - TO CODE
+2025-07-29 11:27:33,413 - INFO - SHIP TO CARRYING FAC.
+2025-07-29 11:27:33,413 - INFO - 001 FROM CODE
+2025-07-29 11:27:33,413 - INFO - ROUTE
+2025-07-29 11:27:33,413 - INFO - PLACARDS
+2025-07-29 11:27:33,413 - INFO - HM
+2025-07-29 11:27:33,413 - INFO - DOT SHIPPING NAME
+2025-07-29 11:27:33,413 - INFO - HAZARD CLASS, IDENTIFICATION NUMBER
+2025-07-29 11:27:33,413 - INFO - COMMODITY DESCRIPTION
+2025-07-29 11:27:33,414 - INFO - MINIMUM
+2025-07-29 11:27:33,414 - INFO - API
+2025-07-29 11:27:33,414 - INFO - X NA1993 Diesel Fuel, 3, III, 1 CARGO TANK
+2025-07-29 11:27:33,414 - INFO - OCTANE
+2025-07-29 11:27:33,414 - INFO - GROSS
+2025-07-29 11:27:33,414 - INFO - GRAVITY
+2025-07-29 11:27:33,414 - INFO - GALLONS
+2025-07-29 11:27:33,414 - INFO - TEMP.
+2025-07-29 11:27:33,414 - INFO - NET
+2025-07-29 11:27:33,414 - INFO - Dyed 15ppm Sulfur TxLd
+2025-07-29 11:27:33,414 - INFO - GALLONS
+2025-07-29 11:27:33,414 - INFO - 000551
+2025-07-29 11:27:33,414 - INFO - 00100
+2025-07-29 11:27:33,414 - INFO - 41.2
+2025-07-29 11:27:33,414 - INFO - 3950
+2025-07-29 11:27:33,414 - INFO - 82.4
+2025-07-29 11:27:33,414 - INFO - 3906
+2025-07-29 11:27:33,414 - INFO - 
+Extracted JSON:
+2025-07-29 11:27:33,414 - INFO - {
+    "SOLD TO: (PERMANENT MAILING ADDRESS ONLY)": "US VENTURE INC-WHITENER\nVARIOUS, TX 77506",
+    "CITY": "VARIOUS,",
+    "STATE": "TX",
+    "ZIP_CODE": "77506",
+    "NAME": "US VENTURE INC-WHITENER",
+    "ADDRESS_BLOCK": "VARIOUS, TX 77506",
+    "CUSTOMER #": "49 001 0107",
+    "DATE": "05/16/25",
+    "PO#": "",
+    "RECEIVER_NAME": "US VENTURE INC-WHITENER",
+    "EMERGENCY NUMBER:": "(800) 424-9300",
+    "TIME": "15: 25",
+    "BILL OF LADING #": "4133206",
+    "CONSIGNED TO": "EMERGENCY NUMBER:\n(800) 424-9300\nKM LIQUIDS TERMINALS LLC\nCCN 12467",
+    "CONSIGNOR": "ExxonMobil\nOil Corporation\n22777 Springwoo\nSpring, TX 77389",
+    "CCN": "12467",
+    "CARRIER CODE": "2300",
+    "CARRIER NAME": "WHITENER ENTERPRISES INC.",
+    "DRIVER NAME": "GREGORY POLK-DUNHAM",
+    "TRAILER": "59",
+    "SHIPPED FROM": "Kinder Morgan - Pasadena - JSTR",
+    "FROM CODE": "001",
+    "products": []
+}
+2025-07-29 11:28:04,909 - INFO - 
+
+################################################################################
+2025-07-29 11:28:04,910 - INFO - Processing file: 0020DE3F-461A-420C-B9BD-4E4F38A98F83.jpg

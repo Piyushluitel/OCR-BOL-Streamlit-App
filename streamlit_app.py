@@ -229,7 +229,7 @@ def process_image_and_extract_data(bucket, key):
  
 
 if st.button('Process Document') and selected_image:
-    img, lines, extracted = process_image_and_extract_data(s3_bucket, selected_image)
+    img, lines, _, _, extracted = process_image_and_extract_data(s3_bucket, selected_image)
 
     if img:
         st.image(img, caption="Uploaded Document", use_container_width=True)
@@ -239,7 +239,7 @@ if st.button('Process Document') and selected_image:
             col1, col2 = st.columns([1.2, 1.8])
 
             with col1:
-                st.subheader("Text Lines")
+                st.subheader("Extracting Text Line by Line")
                 st.markdown(
                     "<div style='height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>"
                     + "<br>".join(lines)
@@ -248,7 +248,7 @@ if st.button('Process Document') and selected_image:
                 )
 
             with col2:
-                st.subheader("Structured JSON")
+                st.subheader("Structured JSON using AnalyzeExpense")
                 st.code(json.dumps(extracted, indent=4), language="json")
     else:
         st.error("Failed to extract data or display the image.")
