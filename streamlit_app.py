@@ -123,7 +123,12 @@ def display_results(img, lines, extracted):
 
     with col2:
         st.subheader("Structured JSON using AnalyzeExpense")
-        st.code(json.dumps(extracted, indent=4), language="json")
+        
+        # Replace newline characters in the JSON with spaces
+        extracted_json = json.dumps(extracted, indent=4)
+        extracted_json = extracted_json.replace("\n", " ")  # Replace newlines with spaces
+        
+        st.code(extracted_json, language="json")
 
 # Processing section
 if uploaded_file:
