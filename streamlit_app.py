@@ -129,8 +129,15 @@ from datetime import datetime
 from try2 import extract_summary_fields, extract_line_items
 
 # Set up Textract client
-textract = boto3.client('textract', region_name='us-east-1')
-
+# Access AWS credentials from Streamlit secrets
+# Use the credentials to create a session
+aws_access_key_id = st.secrets["aws"]["aws_access_key_id"]
+aws_secret_access_key = st.secrets["aws"]["aws_secret_access_key"]
+session = boto3.Session(
+    aws_access_key_id=aws_access_key_id,
+    aws_secret_access_key=aws_secret_access_key
+)
+textract = session.client('textract', region_name='us-east-1')
 # Configure logger once
 logger = logging.getLogger("TextractLogger")
 logger.setLevel(logging.INFO)
