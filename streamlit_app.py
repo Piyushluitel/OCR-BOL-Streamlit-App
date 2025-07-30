@@ -235,4 +235,8 @@ if __name__ == "__main__":
                 else:
                     st.error("Invalid credentials! Please try again.")
     else:
-        display_ocr_content()  # Show main content after successful login
+        # After successful login, display the "Start OCR" button
+        if st.button('Start OCR'):
+            display_ocr_content()  # Show main content after "Start OCR"
+        else:
+            st.write("Click 'Start OCR' to begin processing your documents.")
