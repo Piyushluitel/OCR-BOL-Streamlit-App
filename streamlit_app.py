@@ -10,7 +10,7 @@ import time
 
 # Authentication credentials
 USERNAME = st.secrets["USERNAME"]
-PASSWORD = st.secrets["PASSWORD"] # The strong password
+PASSWORD = st.secrets["PASSWORD"]  # The strong password
 
 # Initialize AWS
 aws_access_key_id = st.secrets["AWS_ACCESS_KEY_ID"]
@@ -225,22 +225,16 @@ if __name__ == "__main__":
     if not st.session_state.authenticated:
         username_input, password_input, login_button = show_login_form()
 
-        # Simulate login process with a loading spinner
+        # Authenticate user directly after clicking login button
         if login_button:
-            with st.spinner("Authenticating... please wait..."):
-                time.sleep(3)  # Simulate login delay
-                if username_input == USERNAME and password_input == PASSWORD:
-                    st.session_state.authenticated = True
-                    st.success("Login successful!")
-                    if st.button('Start OCR'):
-                        display_ocr_content()  # Show main content after "Start OCR"
-                    else:
-                        st.write("Click 'Start OCR' to begin processing your documents.")
-                else:
-                    st.error("Invalid credentials! Please try again.")
-    # else:
-    #     # After successful login, display the "Start OCR" button
-    #     if st.button('Start OCR'):
-    #         display_ocr_content()  # Show main content after "Start OCR"
-    #     else:
-    #         st.write("Click 'Start OCR' to begin processing your documents.")
+            if username_input == USERNAME and password_input == PASSWORD:
+                st.session_state.authenticated = True
+                st.success("Login successful! 🎉")
+            else:
+                st.error("Invalid credentials! Please try again.")
+    else:
+        # After successful login, display the "Start OCR" button
+        if st.button('Start OCR'):
+            display_ocr_content()  # Show main content after "Start OCR"
+        else:
+            st.write("Click 'Start OCR' to begin processing your documents.")
