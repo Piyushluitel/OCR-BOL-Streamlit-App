@@ -55,6 +55,7 @@ st.markdown("""
         .stButton > button:hover {
             background-color: #45a049;
         }
+        /* Centering the login popup */
         .login-popup {
             position: fixed;
             top: 50%;
@@ -65,6 +66,7 @@ st.markdown("""
             padding: 30px;
             box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
             z-index: 100;
+            width: 300px;  /* You can adjust the width as needed */
         }
         .login-popup h3 {
             text-align: center;
