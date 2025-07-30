@@ -231,11 +231,11 @@ if __name__ == "__main__":
                 time.sleep(3)  # Simulate login delay
                 if username_input == USERNAME and password_input == PASSWORD:
                     st.session_state.authenticated = True
-                    st.success("Login successful! 🎉")
-                            if st.button('Start OCR'):
-                                display_ocr_content()  # Show main content after "Start OCR"
-                            else:
-                                st.write("Click 'Start OCR' to begin processing your documents.")
+                    st.success("Login successful!")
+                    if st.button('Start OCR'):
+                        display_ocr_content()  # Show main content after "Start OCR"
+                    else:
+                        st.write("Click 'Start OCR' to begin processing your documents.")
                 else:
                     st.error("Invalid credentials! Please try again.")
     # else:
