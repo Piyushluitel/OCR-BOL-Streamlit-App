@@ -79,11 +79,11 @@ def show_login_form():
     """, unsafe_allow_html=True)
 
     # Authentication form inputs
-    username_input = st.text_input("Username")
-    password_input = st.text_input("Password", type="password")
+    username_input = st.text_input("Username", key="username_input")
+    password_input = st.text_input("Password", type="password", key="password_input")
     
     # Authenticate button
-    login_button = st.button("Authenticate")
+    login_button = st.button("Authenticate", key="login_button")
     
     return username_input, password_input, login_button
 
@@ -211,17 +211,22 @@ def display_ocr_content():
 
 # Main logic
 if __name__ == "__main__":
-    # Show login form
-    username_input, password_input, login_button = show_login_form()
+    # Check if user is authenticated
+    if "authenticated" not in st.session_state:
+        st.session_state.authenticated = False
+    
+    # If not authenticated, show the login form
+    if not st.session_state.authenticated:
+        username_input, password_input, login_button = show_login_form()
 
-    # Simulate login process with a loading spinner
-    if login_button:
-        with st.spinner("Authenticating... please wait..."):
-            time.sleep(3)  # Simulate login delay
-            if username_input == USERNAME and password_input == PASSWORD:
-                st.success("Login successful! 🎉")
-                display_ocr_content()  # Show main content after successful login
-            else:
-                st.error("Invalid credentials! Please try again.")
+        # Simulate login process with a loading spinner
+        if login_button:
+            with st.spinner("Authenticating... please wait..."):
+                time.sleep(3)  # Simulate login delay
+                if username_input == USERNAME and password_input == PASSWORD:
+                    st.session_state.authenticated = True
+                    st.success("Login successful! 🎉")
+                else:
+                    st.error("Invalid credentials! Please try again.")
     else:
-        show_login_form()
+        display_ocr_content()  # Show main content after successful login
