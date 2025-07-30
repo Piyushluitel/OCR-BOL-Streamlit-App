@@ -9,7 +9,7 @@ from try2 import extract_summary_fields, extract_line_items
 import time
 
 # Authentication credentials
-USERNAME = "info@fleetpanda.com"
+USERNAME = "admin"
 PASSWORD = "A!7fV#3jLnP2rD8zXq@5T$wB9zJk"  # The strong password
 
 # Initialize AWS
@@ -47,22 +47,23 @@ def show_login_form():
                 transform: translate(-50%, -50%);
                 background-color: white;
                 border-radius: 10px;
-                padding: 30px;
+                padding: 20px;
                 box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
                 z-index: 100;
-                width: 250px;  /* Smaller box width */
+                width: 200px;  /* Smaller box width */
             }
             .login-popup h3 {
                 text-align: center;
                 color: #2c3e50;
-                margin-bottom: 20px;
+                margin-bottom: 10px;
             }
             .login-popup input {
                 width: 100%;
-                padding: 10px;
-                margin: 10px 0;
+                padding: 8px;
+                margin: 8px 0;
                 border: 1px solid #ccc;
                 border-radius: 5px;
+                font-size: 14px;
             }
             .login-popup .login-btn {
                 width: 100%;
