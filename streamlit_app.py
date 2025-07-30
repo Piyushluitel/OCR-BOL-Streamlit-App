@@ -9,8 +9,8 @@ from try2 import extract_summary_fields, extract_line_items
 import time
 
 # Authentication credentials
-USERNAME = "admin"
-PASSWORD = "A!7fV#3jLnP2rD8zXq@5T$wB9zJk"  # The strong password
+USERNAME = st.secrets["USERNAME"]
+PASSWORD = st.secrets["PASSWORD"] # The strong password
 
 # Initialize AWS
 aws_access_key_id = st.secrets["AWS_ACCESS_KEY_ID"]
