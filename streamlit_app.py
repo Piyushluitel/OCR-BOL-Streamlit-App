@@ -9,7 +9,7 @@ from try2 import extract_summary_fields, extract_line_items
 import time
 
 # Authentication credentials
-USERNAME = "admin"
+USERNAME = "info@fleetpanda.com"
 PASSWORD = "A!7fV#3jLnP2rD8zXq@5T$wB9zJk"  # The strong password
 
 # Initialize AWS
@@ -39,6 +39,7 @@ st.set_page_config(page_title="Document OCR with Textract", page_icon=":page_fac
 def show_login_form():
     st.markdown("""
         <style>
+            /* Centering the login popup */
             .login-popup {
                 position: fixed;
                 top: 50%;
@@ -49,11 +50,12 @@ def show_login_form():
                 padding: 30px;
                 box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
                 z-index: 100;
-                width: 300px;
+                width: 250px;  /* Smaller box width */
             }
             .login-popup h3 {
                 text-align: center;
                 color: #2c3e50;
+                margin-bottom: 20px;
             }
             .login-popup input {
                 width: 100%;
@@ -77,6 +79,9 @@ def show_login_form():
             }
         </style>
     """, unsafe_allow_html=True)
+
+    # Add title to the authentication page
+    st.markdown("<h2 style='text-align: center;'>OCR on BOL</h2>", unsafe_allow_html=True)
 
     # Authentication form inputs
     username_input = st.text_input("Username", key="username_input")
