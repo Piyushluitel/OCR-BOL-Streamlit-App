@@ -35,82 +35,60 @@ if not logger.handlers:
 # Streamlit UI with enhanced layout
 st.set_page_config(page_title="Document OCR with Textract", page_icon=":page_facing_up:", layout="wide")
 
-# Sidebar for authentication
-st.sidebar.title("Login")
+# Function to display login form centered on the page
+def show_login_form():
+    st.markdown("""
+        <style>
+            .login-popup {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color: white;
+                border-radius: 10px;
+                padding: 30px;
+                box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+                z-index: 100;
+                width: 300px;
+            }
+            .login-popup h3 {
+                text-align: center;
+                color: #2c3e50;
+            }
+            .login-popup input {
+                width: 100%;
+                padding: 10px;
+                margin: 10px 0;
+                border: 1px solid #ccc;
+                border-radius: 5px;
+            }
+            .login-popup .login-btn {
+                width: 100%;
+                padding: 10px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 16px;
+                cursor: pointer;
+            }
+            .login-popup .login-btn:hover {
+                background-color: #45a049;
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
-# Login form input fields
-username_input = st.sidebar.text_input("Username")
-password_input = st.sidebar.text_input("Password", type="password")
-
-# Styling for the login modal
-st.markdown("""
-    <style>
-        .stButton > button {
-            background-color: #4CAF50;
-            color: white;
-            border-radius: 10px;
-            height: 50px;
-            width: 200px;
-        }
-        .stButton > button:hover {
-            background-color: #45a049;
-        }
-        /* Centering the login popup */
-        .login-popup {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
-            z-index: 100;
-            width: 300px;  /* You can adjust the width as needed */
-        }
-        .login-popup h3 {
-            text-align: center;
-            color: #2c3e50;
-        }
-        .login-popup input {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-        }
-        .login-popup .login-btn {
-            width: 100%;
-            padding: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            font-size: 16px;
-            cursor: pointer;
-        }
-        .login-popup .login-btn:hover {
-            background-color: #45a049;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-# Modal for login when user is not authenticated
-if not (username_input == USERNAME and password_input == PASSWORD):
-    # When the Authenticate button is clicked, simulate login delay
-    login_button = st.sidebar.button("Authenticate")
-    if login_button:
-        with st.spinner("Authenticating... please wait..."):
-            time.sleep(3)  # Simulate a login delay of 3 seconds
-        # After the delay, check the credentials
-        if username_input == USERNAME and password_input == PASSWORD:
-            st.sidebar.success("Login successful! 🎉")
-        else:
-            st.sidebar.error("Invalid credentials! Please try again.")
-else:
-    st.sidebar.success("Login successful! 🎉")
+    # Authentication form inputs
+    username_input = st.text_input("Username")
+    password_input = st.text_input("Password", type="password")
     
-    # Streamlit UI for the main app
+    # Authenticate button
+    login_button = st.button("Authenticate")
+    
+    return username_input, password_input, login_button
+
+# Function to display the main OCR content after successful login
+def display_ocr_content():
     st.title("Document OCR Processing with Amazon Textract")
     st.markdown("""
         This app allows you to process documents (images) using Amazon Textract. You can either select an image from the S3 bucket 
@@ -134,8 +112,6 @@ else:
             st.error(f"Error accessing S3 bucket: {e}")
             image_filenames = []
 
-        # selected_image = st.selectbox('Select Image Filename from S3:', image_filenames) if image_filenames else ""
-        # Set the default value in the selectbox to '00052AAF-AE51-4918-A307-4C35480299F0.jpg' if it's available
         default_image = '00052AAF-AE51-4918-A307-4C35480299F0.jpg'
         selected_image = st.selectbox(
             'Select Image Filename from S3:', 
@@ -233,12 +209,19 @@ else:
         else:
             st.write("Please select or upload an image to process.")
 
-    # Custom CSS for better appearance
-    st.markdown("""
-        <style>
-            .sidebar .sidebar-content {
-                background-color: #f0f2f6;
-                padding: 20px;
-            }
-        </style>
-    """, unsafe_allow_html=True)
+# Main logic
+if __name__ == "__main__":
+    # Show login form
+    username_input, password_input, login_button = show_login_form()
+
+    # Simulate login process with a loading spinner
+    if login_button:
+        with st.spinner("Authenticating... please wait..."):
+            time.sleep(3)  # Simulate login delay
+            if username_input == USERNAME and password_input == PASSWORD:
+                st.success("Login successful! 🎉")
+                display_ocr_content()  # Show main content after successful login
+            else:
+                st.error("Invalid credentials! Please try again.")
+    else:
+        show_login_form()
