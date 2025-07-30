@@ -232,11 +232,15 @@ if __name__ == "__main__":
                 if username_input == USERNAME and password_input == PASSWORD:
                     st.session_state.authenticated = True
                     st.success("Login successful! 🎉")
+                            if st.button('Start OCR'):
+                                display_ocr_content()  # Show main content after "Start OCR"
+                            else:
+                                st.write("Click 'Start OCR' to begin processing your documents.")
                 else:
                     st.error("Invalid credentials! Please try again.")
-    else:
-        # After successful login, display the "Start OCR" button
-        if st.button('Start OCR'):
-            display_ocr_content()  # Show main content after "Start OCR"
-        else:
-            st.write("Click 'Start OCR' to begin processing your documents.")
+    # else:
+    #     # After successful login, display the "Start OCR" button
+    #     if st.button('Start OCR'):
+    #         display_ocr_content()  # Show main content after "Start OCR"
+    #     else:
+    #         st.write("Click 'Start OCR' to begin processing your documents.")
