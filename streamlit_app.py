@@ -3,7 +3,6 @@ import boto3
 import json
 import logging
 import time
-import os
 from PIL import Image
 import io
 
@@ -39,8 +38,8 @@ st.set_page_config(page_title="Document OCR with Textract", page_icon=":page_fac
 def display_ocr_content():
     st.title("Document OCR Processing with Amazon Textract")
     st.markdown("""
-        This app allows you to process documents (images or PDFs) using Amazon Textract. You can either select an image or PDF 
-        from the S3 bucket or upload your own document for text extraction. Once processed, the extracted data will be displayed.
+        This app allows you to process documents (images or PDFs) using Amazon Textract. You can upload either a **PDF** or an **Image** 
+        to extract text from the document. The extracted data will be displayed after processing.
     """)
 
     # Sidebar for input fields
@@ -48,23 +47,7 @@ def display_ocr_content():
         st.title("OCR Document Processing")
         s3_bucket = st.text_input('Enter S3 Bucket Name:', 'fp-prod-s3')
 
-        # Directly list image and PDF files from the selected S3 bucket
-        try:
-            s3_objects = s3.list_objects_v2(Bucket=s3_bucket)
-            if 'Contents' in s3_objects:
-                document_filenames = [obj['Key'] for obj in s3_objects['Contents'] if obj['Key'].lower().endswith(('.jpg', '.jpeg', '.png', '.pdf'))]
-            else:
-                document_filenames = []
-        except Exception as e:
-            st.error(f"Error accessing S3 bucket: {e}")
-            document_filenames = []
-
-        selected_document = st.selectbox(
-            'Select Document Filename from S3:', 
-            document_filenames, 
-            index=0
-        )
-        uploaded_file = st.file_uploader("Or Upload a Document (Image or PDF)", type=["jpg", "jpeg", "png", "pdf"])
+        uploaded_file = st.file_uploader("Upload a Document (PDF or Image)", type=["jpg", "jpeg", "png", "pdf"])
 
     # Function to upload PDF to S3 (temporarily)
     def upload_pdf_to_s3(pdf_file, bucket_name, object_name):
@@ -81,7 +64,7 @@ def display_ocr_content():
         try:
             logger.info("\n\n" + "#" * 80)
             logger.info(f"Processing file: {key_or_document}")
-            
+
             if isinstance(key_or_document, str):  # If it's an S3 key
                 obj = s3.get_object(Bucket=bucket, Key=key_or_document)
                 document_data = obj['Body'].read()
@@ -126,8 +109,21 @@ def display_ocr_content():
                     logger.error(f"Failed to delete temporary PDF file from S3: {e}")
 
             else:  # If Image, use AnalyzeExpense and AnalyzeDocument API
-                # Similar logic for image file as previously described
-                pass
+                response_expense = textract.analyze_expense(Document={'Bytes': document.tobytes()})
+                summary_data = extract_summary_fields(response_expense, logger)
+                products_data = extract_line_items(response_expense, logger)
+
+                response_doc = textract.analyze_document(
+                    Document={'Bytes': document.tobytes()},
+                    FeatureTypes=['TABLES', 'FORMS']
+                )
+
+                lines = [block['Text'] for block in response_doc['Blocks'] if block['BlockType'] == 'LINE']
+                tables = [block for block in response_doc['Blocks'] if block['BlockType'] == 'TABLE']
+                key_value_pairs = [block for block in response_doc['Blocks'] if block['BlockType'] == 'KEY_VALUE_SET']
+
+                extracted = summary_data
+                extracted["products"] = products_data
 
             logger.info("\nExtracted Text Lines:")
             for line in lines:
@@ -176,16 +172,7 @@ def display_ocr_content():
             if document:
                 display_results(document, lines, extracted)
     else:
-        if selected_document:
-            if st.button('See Extracted Results'):
-                with st.spinner("Extracting and parsing... please wait..."):
-                    document, lines, extracted = process_document_and_extract_data(s3_bucket, selected_document)
-
-                    if document:
-                        display_results(document, lines, extracted)
-
-        else:
-            st.write("Please select or upload a document to process.")
+        st.write("Please upload a document to process.")
 
 # Main logic
 if __name__ == "__main__":
@@ -210,8 +197,6 @@ if __name__ == "__main__":
             display_ocr_content()  # Show main content after "Start OCR"
         else:
             st.write("Click 'Start OCR' to begin processing your documents.")
-
-
 
 # import streamlit as st
 # import boto3
