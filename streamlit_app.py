@@ -1,26 +1,13 @@
 import streamlit as st
 import boto3
-import json
-import logging
-import time
 from PIL import Image
 import io
+import json
+import logging
+from try2 import extract_summary_fields, extract_line_items
+from pdf2image import convert_from_bytes
 
-# Authentication credentials
-USERNAME = st.secrets["USERNAME"]
-PASSWORD = st.secrets["PASSWORD"]
-
-# Initialize AWS
-aws_access_key_id = st.secrets["AWS_ACCESS_KEY_ID"]
-aws_secret_access_key = st.secrets["AWS_SECRET_ACCESS_KEY"]
-session = boto3.Session(
-    aws_access_key_id=aws_access_key_id,
-    aws_secret_access_key=aws_secret_access_key
-)
-textract = session.client('textract', region_name='us-east-1')
-s3 = session.client('s3')
-
-# Configure logger
+# Initialize logging
 logger = logging.getLogger("TextractLogger")
 logger.setLevel(logging.INFO)
 
@@ -31,410 +18,217 @@ if not logger.handlers:
     file_handler.setFormatter(formatter)
     logger.addHandler(file_handler)
 
-# Streamlit UI with enhanced layout
+# Authentication credentials from Streamlit secrets
+USERNAME = st.secrets["USERNAME"]
+PASSWORD = st.secrets["PASSWORD"]
+
+AWS_ACCESS_KEY_ID = st.secrets["AWS_ACCESS_KEY_ID"]
+AWS_SECRET_ACCESS_KEY = st.secrets["AWS_SECRET_ACCESS_KEY"]
+
+# Initialize AWS Textract client
+def initialize_textract_client():
+    session = boto3.Session(
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY
+    )
+    return session.client('textract', region_name='us-east-1')
+
+textract = initialize_textract_client()
+
+# Streamlit UI configuration
 st.set_page_config(page_title="Document OCR with Textract", page_icon=":page_facing_up:", layout="wide")
 
-# Function to display the main OCR content after successful login
-def display_ocr_content():
-    st.title("Document OCR Processing with Amazon Textract")
+# Login Form
+def show_login_form():
     st.markdown("""
-        This app allows you to process documents (images or PDFs) using Amazon Textract. You can upload either a **PDF** or an **Image** 
-        to extract text from the document. The extracted data will be displayed after processing.
-    """)
+        <style>
+            .login-popup {
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color: white;
+                border-radius: 10px;
+                padding: 20px;
+                box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
+                z-index: 100;
+                width: 250px;
+            }
+            .login-popup h3 {
+                text-align: center;
+                color: #2c3e50;
+                margin-bottom: 10px;
+            }
+            .css-1d391kg {
+                width: 200px;
+                margin: 0 auto;
+                padding: 8px;
+            }
+            .login-popup .login-btn {
+                width: 100%;
+                padding: 10px;
+                background-color: #4CAF50;
+                color: white;
+                border: none;
+                border-radius: 5px;
+                font-size: 16px;
+                cursor: pointer;
+            }
+            .login-popup .login-btn:hover {
+                background-color: #45a049;
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
-    # Sidebar for input fields
+    st.markdown("<h2 style='text-align: center;'>Data Extraction from Bill of Lading Image with Amazon Textract OCR</h2>", unsafe_allow_html=True)
+
+    username_input = st.text_input("Username", key="username_input")
+    password_input = st.text_input("Password", type="password", key="password_input")
+    login_button = st.button("Authenticate", key="login_button")
+
+    return username_input, password_input, login_button
+
+# Function to read filenames from an S3 source
+def read_s3_filenames(file_path="s3_filenames.txt"):
+    try:
+        with open(file_path, 'r') as file:
+            return [line.strip() for line in file.readlines() if line.strip()]
+    except FileNotFoundError:
+        st.error(f"Error: {file_path} not found.")
+        return []
+
+# Cleaning text to remove newline characters
+def clean_text(text):
+    return text.replace('\n', ' ')
+
+# Clean summary data
+def clean_summary_data(summary):
+    return {key: clean_text(value) if isinstance(value, str) else value for key, value in summary.items()}
+
+# Clean product data
+def clean_products_data(products):
+    return [
+        {key: clean_text(value) if isinstance(value, str) else value for key, value in product.items()}
+        for product in products
+    ]
+
+# File upload logic
+def handle_file_upload(input_method):
+    if input_method == "Upload a file":
+        return st.file_uploader("Upload a Document (Image or PDF)", type=["jpg", "jpeg", "png"])
+    return None
+
+# File selection from list
+def handle_file_selection(input_method):
+    if input_method == "Choose from existing list":
+        filenames = read_s3_filenames()
+        default_file = '00052AAF-AE51-4918-A307-4C35480299F0.jpg'
+        selected_filename = st.selectbox('Select Image from list:', filenames, index=filenames.index(default_file) if default_file in filenames else 0)
+        return selected_filename
+    return None
+
+# Image processing and Textract text extraction
+def process_image_and_extract_data(bucket, key_or_file):
+    try:
+        logger.info(f"\n\nProcessing file: {key_or_file}")
+        
+        s3 = boto3.client('s3')
+        file_data, image = None, None
+
+        if isinstance(key_or_file, str):  # If it's an S3 key
+            obj = s3.get_object(Bucket=bucket, Key=key_or_file)
+            file_data = obj['Body'].read()
+            image = Image.open(io.BytesIO(file_data)) if key_or_file.lower().endswith(('.jpg', '.jpeg', '.png')) else None
+        else:  # If it's an uploaded file
+            file_data = key_or_file.read()
+            image = Image.open(io.BytesIO(file_data)) if key_or_file.type in ['image/jpeg', 'image/png'] else None
+
+        all_lines, line_items = [], []
+
+        if image:  # Image processing
+            response_expense = textract.analyze_expense(Document={'Bytes': file_data})
+            summary_data = extract_summary_fields(response_expense, logger)
+            line_items = extract_line_items(response_expense, logger)
+
+            response_doc = textract.analyze_document(Document={'Bytes': file_data}, FeatureTypes=['TABLES', 'FORMS'])
+            all_lines = [block['Text'] for block in response_doc['Blocks'] if block['BlockType'] == 'LINE']
+
+        else:  # PDF processing
+            images = convert_from_bytes(file_data)
+            for img in images:
+                img_bytes = io.BytesIO()
+                img.save(img_bytes, format='PNG')
+                img_bytes.seek(0)
+
+                response_doc = textract.analyze_document(Document={'Bytes': img_bytes.read()}, FeatureTypes=['TABLES', 'FORMS'])
+                all_lines.extend([block['Text'] for block in response_doc['Blocks'] if block['BlockType'] == 'LINE'])
+
+            summary_data = {'lines': all_lines}
+            line_items = []
+
+        final_result = {'summary': summary_data, 'products': line_items}
+        final_result['summary'] = clean_summary_data(final_result['summary'])
+        final_result['products'] = clean_products_data(final_result['products'])
+
+        json_output = json.dumps(final_result, indent=4)
+        logger.info(f"Extracted JSON: {json_output}")
+
+        return image, final_result
+    except Exception as e:
+        logger.error(f"Processing failed: {e}")
+        st.error(f"Error: {e}")
+        return None, {}
+
+# Displaying results
+def display_results(img, final_result):
+    if img:
+        st.image(img, caption="Uploaded Document", use_container_width=True)
+    
+    st.subheader("Structured JSON with Summary and Line Items (Products)")
+    st.code(json.dumps(final_result, indent=4), language="json")
+
+# Main OCR content and processing flow
+def display_ocr_content():
+    input_method = st.sidebar.radio("Choose Input Method", ("Upload a file", "Choose from existing list"), index=1)
+
+    # Sidebar content
     with st.sidebar:
         st.title("OCR Document Processing")
-        s3_bucket = st.text_input('Enter S3 Bucket Name:', 'fp-prod-s3')
+        st.markdown("""
+            This app allows you to process documents (images or PDFs) using Amazon Textract. You can either select an image from the list 
+            of filenames or upload your own image or PDF for text extraction. Once processed, the extracted data will be displayed.
+        """)
 
-        uploaded_file = st.file_uploader("Upload a Document (PDF or Image)", type=["jpg", "jpeg", "png", "pdf"])
+        uploaded_file = handle_file_upload(input_method)
+        selected_filename = handle_file_selection(input_method)
 
-    # Function to upload PDF to S3 (temporarily)
-    def upload_pdf_to_s3(pdf_file, bucket_name, object_name):
-        try:
-            s3.upload_fileobj(pdf_file, bucket_name, object_name)
-            logger.info(f"PDF uploaded to S3: {object_name}")
-            return True
-        except Exception as e:
-            logger.error(f"Failed to upload PDF: {e}")
-            return False
+    s3_bucket = 'fp-prod-s3'
 
-    # Function to process document and extract data using Textract
-    def process_document_and_extract_data(bucket, key_or_document):
-        try:
-            logger.info("\n\n" + "#" * 80)
-            logger.info(f"Processing file: {key_or_document}")
-
-            if isinstance(key_or_document, str):  # If it's an S3 key
-                obj = s3.get_object(Bucket=bucket, Key=key_or_document)
-                document_data = obj['Body'].read()
-                if key_or_document.lower().endswith(('.jpg', '.jpeg', '.png')):
-                    document = Image.open(io.BytesIO(document_data))
-                else:
-                    document = document_data  # For PDF, keep raw data
-            else:  # If it's an uploaded file
-                document = key_or_document
-
-            # If PDF, use the Textract 'start_document_text_detection' API
-            if isinstance(document, bytes):  # PDF file
-                pdf_name = f"pdf_{int(time.time())}.pdf"  # Generate a unique name
-                upload_success = upload_pdf_to_s3(document, bucket, pdf_name)
-                if not upload_success:
-                    return None, [], {"error": "Failed to upload PDF to S3"}
-
-                response = textract.start_document_text_detection(
-                    DocumentLocation={'S3Object': {'Bucket': bucket, 'Name': pdf_name}}
-                )
-                job_id = response['JobId']
-                # Wait for the job to complete and retrieve the result
-                while True:
-                    result = textract.get_document_text_detection(JobId=job_id)
-                    status = result['JobStatus']
-                    if status in ['SUCCEEDED', 'FAILED']:
-                        break
-                    time.sleep(5)
-                
-                if status == 'SUCCEEDED':
-                    blocks = result['Blocks']
-                    lines = [block['Text'] for block in blocks if block['BlockType'] == 'LINE']
-                    extracted = {"lines": lines}
-                else:
-                    extracted = {"error": "Textract job failed"}
-                
-                # Remove the temporary PDF file from S3 after processing
-                try:
-                    s3.delete_object(Bucket=bucket, Key=pdf_name)
-                    logger.info(f"Temporary PDF file {pdf_name} deleted from S3.")
-                except Exception as e:
-                    logger.error(f"Failed to delete temporary PDF file from S3: {e}")
-
-            else:  # If Image, use AnalyzeExpense and AnalyzeDocument API
-                response_expense = textract.analyze_expense(Document={'Bytes': document.tobytes()})
-                summary_data = extract_summary_fields(response_expense, logger)
-                products_data = extract_line_items(response_expense, logger)
-
-                response_doc = textract.analyze_document(
-                    Document={'Bytes': document.tobytes()},
-                    FeatureTypes=['TABLES', 'FORMS']
-                )
-
-                lines = [block['Text'] for block in response_doc['Blocks'] if block['BlockType'] == 'LINE']
-                tables = [block for block in response_doc['Blocks'] if block['BlockType'] == 'TABLE']
-                key_value_pairs = [block for block in response_doc['Blocks'] if block['BlockType'] == 'KEY_VALUE_SET']
-
-                extracted = summary_data
-                extracted["products"] = products_data
-
-            logger.info("\nExtracted Text Lines:")
-            for line in lines:
-                logger.info(line)
-
-            json_output = json.dumps(extracted, indent=4)
-            logger.info("\nExtracted JSON:")
-            logger.info(json_output)
-
-            return document, lines, extracted
-        except Exception as e:
-            logger.error(f"Processing failed: {e}")
-            st.error(f"Error: {e}")
-            return None, [], {}
-
-    # Displaying results and UI enhancements
-    def display_results(document, lines, extracted):
-        if isinstance(document, Image.Image):
-            st.image(document, caption="Uploaded Document", use_container_width=True)
-        else:
-            st.write("PDF Document processed successfully.")
-        
-        # Display extracted data
-        col1, col2 = st.columns([1.5, 2.5])  # Wider column for extracted data
-
-        with col1:
-            st.subheader("Extracting Text Line by Line")
-            st.markdown(
-                "<div style='height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>"
-                + "<br>".join(lines)
-                + "</div>",
-                unsafe_allow_html=True
-            )
-
-        with col2:
-            st.subheader("Structured JSON using AnalyzeExpense")
-            st.code(json.dumps(extracted, indent=4), language="json")
-
-    # Processing section
     if uploaded_file:
-        st.write("Processing uploaded document...")
-
         with st.spinner("Processing the document, please wait..."):
-            document, lines, extracted = process_document_and_extract_data(s3_bucket, uploaded_file)
+            img, final_result = process_image_and_extract_data(s3_bucket, uploaded_file)
+            display_results(img, final_result)
 
-            if document:
-                display_results(document, lines, extracted)
+    elif selected_filename:
+        with st.spinner("Processing, please wait..."):
+            img, final_result = process_image_and_extract_data(s3_bucket, selected_filename)
+            display_results(img, final_result)
+
     else:
-        st.write("Please upload a document to process.")
+        st.write("Please select or upload an image or PDF to process.")
 
 # Main logic
 if __name__ == "__main__":
-    # Check if user is authenticated
     if "authenticated" not in st.session_state:
         st.session_state.authenticated = False
     
-    # If not authenticated, show the login form
     if not st.session_state.authenticated:
         username_input, password_input, login_button = show_login_form()
 
-        # Authenticate user directly after clicking login button
         if login_button:
             if username_input == USERNAME and password_input == PASSWORD:
                 st.session_state.authenticated = True
-                st.success("Login successful! 🎉")
             else:
                 st.error("Invalid credentials! Please try again.")
     else:
-        # Automatically show the "Start OCR" button after successful login
-        if st.button('Start OCR'):
-            display_ocr_content()  # Show main content after "Start OCR"
-        else:
-            st.write("Click 'Start OCR' to begin processing your documents.")
-
-# import streamlit as st
-# import boto3
-# from PIL import Image
-# import io
-# import json
-# import logging
-# from datetime import datetime
-# from try2 import extract_summary_fields, extract_line_items
-# import time
-
-# # Authentication credentials
-# USERNAME = st.secrets["USERNAME"]
-# PASSWORD = st.secrets["PASSWORD"]  # The strong password
-
-# # Initialize AWS
-# aws_access_key_id = st.secrets["AWS_ACCESS_KEY_ID"]
-# aws_secret_access_key = st.secrets["AWS_SECRET_ACCESS_KEY"]
-# session = boto3.Session(
-#     aws_access_key_id=aws_access_key_id,
-#     aws_secret_access_key=aws_secret_access_key
-# )
-# textract = session.client('textract', region_name='us-east-1')
-
-# # Configure logger
-# logger = logging.getLogger("TextractLogger")
-# logger.setLevel(logging.INFO)
-
-# if not logger.handlers:
-#     log_file = "textract_processing.log"
-#     file_handler = logging.FileHandler(log_file)
-#     formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-#     file_handler.setFormatter(formatter)
-#     logger.addHandler(file_handler)
-
-# # Streamlit UI with enhanced layout
-# st.set_page_config(page_title="Document OCR with Textract", page_icon=":page_facing_up:", layout="wide")
-
-# # Function to display login form centered on the page
-# def show_login_form():
-#     st.markdown("""
-#         <style>
-#             /* Centering the login popup */
-#             .login-popup {
-#                 position: fixed;
-#                 top: 50%;
-#                 left: 50%;
-#                 transform: translate(-50%, -50%);
-#                 background-color: white;
-#                 border-radius: 10px;
-#                 padding: 20px;
-#                 box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.2);
-#                 z-index: 100;
-#                 width: 200px;  /* Smaller box width */
-#             }
-#             .login-popup h3 {
-#                 text-align: center;
-#                 color: #2c3e50;
-#                 margin-bottom: 10px;
-#             }
-#             .login-popup input {
-#                 width: 100%;
-#                 padding: 8px;
-#                 margin: 8px 0;
-#                 border: 1px solid #ccc;
-#                 border-radius: 5px;
-#                 font-size: 14px;
-#             }
-#             .login-popup .login-btn {
-#                 width: 100%;
-#                 padding: 10px;
-#                 background-color: #4CAF50;
-#                 color: white;
-#                 border: none;
-#                 border-radius: 5px;
-#                 font-size: 16px;
-#                 cursor: pointer;
-#             }
-#             .login-popup .login-btn:hover {
-#                 background-color: #45a049;
-#             }
-#         </style>
-#     """, unsafe_allow_html=True)
-
-#     # Add title to the authentication page
-#     st.markdown("<h2 style='text-align: center;'>OCR on BOL</h2>", unsafe_allow_html=True)
-
-#     # Authentication form inputs
-#     username_input = st.text_input("Username", key="username_input")
-#     password_input = st.text_input("Password", type="password", key="password_input")
-    
-#     # Authenticate button
-#     login_button = st.button("Authenticate", key="login_button")
-    
-#     return username_input, password_input, login_button
-
-# # Function to display the main OCR content after successful login
-# def display_ocr_content():
-#     st.title("Document OCR Processing with Amazon Textract")
-#     st.markdown("""
-#         This app allows you to process documents (images) using Amazon Textract. You can either select an image from the S3 bucket 
-#         or upload your own image for text extraction. Once processed, the extracted data will be displayed.
-#     """)
-
-#     # Sidebar for input fields
-#     with st.sidebar:
-#         st.title("OCR Document Processing")
-#         s3_bucket = st.text_input('Enter S3 Bucket Name:', 'fp-prod-s3')
-
-#         # Directly list image files from the selected S3 bucket
-#         s3 = boto3.client('s3')
-#         try:
-#             s3_objects = s3.list_objects_v2(Bucket=s3_bucket)
-#             if 'Contents' in s3_objects:
-#                 image_filenames = [obj['Key'] for obj in s3_objects['Contents'] if obj['Key'].lower().endswith(('.jpg', '.jpeg', '.png'))]
-#             else:
-#                 image_filenames = []
-#         except Exception as e:
-#             st.error(f"Error accessing S3 bucket: {e}")
-#             image_filenames = []
-
-#         default_image = '00052AAF-AE51-4918-A307-4C35480299F0.jpg'
-#         selected_image = st.selectbox(
-#             'Select Image Filename from S3:', 
-#             image_filenames, 
-#             index=image_filenames.index(default_image) if default_image in image_filenames else 0
-#         )
-#         uploaded_file = st.file_uploader("Or Upload a Document (Image Only)", type=["jpg", "jpeg", "png"])
-
-#     # Function to process image and extract data using Textract
-#     def process_image_and_extract_data(bucket, key_or_image):
-#         try:
-#             logger.info("\n\n" + "#" * 80)
-#             logger.info(f"Processing file: {key_or_image}")
-            
-#             s3 = boto3.client('s3')
-#             if isinstance(key_or_image, str):  # If it's an S3 key
-#                 obj = s3.get_object(Bucket=bucket, Key=key_or_image)
-#                 image_data = obj['Body'].read()
-#                 image = Image.open(io.BytesIO(image_data))
-#             else:  # If it's an uploaded file
-#                 image = key_or_image
-            
-#             # AnalyzeExpense
-#             response_expense = textract.analyze_expense(Document={'S3Object': {'Bucket': bucket, 'Name': key_or_image}} if isinstance(key_or_image, str) else {'Bytes': image.tobytes()})
-#             summary_data = extract_summary_fields(response_expense, logger)
-#             products_data = extract_line_items(response_expense, logger)
-
-#             # AnalyzeDocument for Tables and Forms
-#             response_doc = textract.analyze_document(
-#                 Document={'S3Object': {'Bucket': bucket, 'Name': key_or_image}} if isinstance(key_or_image, str) else {'Bytes': image.tobytes()},
-#                 FeatureTypes=['TABLES', 'FORMS']
-#             )
-
-#             # Extract lines, tables, forms
-#             lines = [block['Text'] for block in response_doc['Blocks'] if block['BlockType'] == 'LINE']
-#             tables = [block for block in response_doc['Blocks'] if block['BlockType'] == 'TABLE']
-#             key_value_pairs = [block for block in response_doc['Blocks'] if block['BlockType'] == 'KEY_VALUE_SET']
-
-#             logger.info("\nExtracted Text Lines:")
-#             for line in lines:
-#                 logger.info(line)
-
-#             output = summary_data
-#             output["products"] = products_data
-
-#             json_output = json.dumps(output, indent=4)
-#             logger.info("\nExtracted JSON:")
-#             logger.info(json_output)
-
-#             return image, lines, key_value_pairs, tables, output
-#         except Exception as e:
-#             logger.error(f"Processing failed: {e}")
-#             st.error(f"Error: {e}")
-#             return None, [], [], [], {}
-
-#     # Displaying results and UI enhancements
-#     def display_results(img, lines, extracted):
-#         st.image(img, caption="Uploaded Document", use_container_width=True)
-
-#         # Popover-style comparison with wider box
-#         col1, col2 = st.columns([1.5, 2.5])  # Wider column for extracted data
-
-#         with col1:
-#             st.subheader("Extracting Text Line by Line")
-#             st.markdown(
-#                 "<div style='height: 300px; overflow-y: auto; border: 1px solid #ccc; padding: 10px;'>"
-#                 + "<br>".join(lines)
-#                 + "</div>",
-#                 unsafe_allow_html=True
-#             )
-
-#         with col2:
-#             st.subheader("Structured JSON using AnalyzeExpense")
-#             st.code(json.dumps(extracted, indent=4), language="json")
-
-#     # Processing section
-#     if uploaded_file:
-#         st.write("Processing uploaded image...")
-
-#         with st.spinner("Processing the document, please wait..."):
-#             img, lines, _, _, extracted = process_image_and_extract_data(s3_bucket, uploaded_file)
-
-#             if img:
-#                 display_results(img, lines, extracted)
-#     else:
-#         if selected_image:
-#             if st.button('See Extracted Results'):
-#                 with st.spinner("Extracting and parsing... please wait..."):
-#                     time.sleep(3)  # Simulate a delay for processing (3-4 seconds)
-#                     img, lines, _, _, extracted = process_image_and_extract_data(s3_bucket, selected_image)
-
-#                     if img:
-#                         display_results(img, lines, extracted)
-
-#         else:
-#             st.write("Please select or upload an image to process.")
-
-# # Main logic
-# if __name__ == "__main__":
-#     # Check if user is authenticated
-#     if "authenticated" not in st.session_state:
-#         st.session_state.authenticated = False
-    
-#     # If not authenticated, show the login form
-#     if not st.session_state.authenticated:
-#         username_input, password_input, login_button = show_login_form()
-
-#         # Authenticate user directly after clicking login button
-#         if login_button:
-#             if username_input == USERNAME and password_input == PASSWORD:
-#                 st.session_state.authenticated = True
-#                 st.success("Login successful! 🎉")
-#             else:
-#                 st.error("Invalid credentials! Please try again.")
-#     else:
-#         # Automatically show the "Start OCR" button after successful login
-#         if st.button('Start OCR'):
-#             display_ocr_content()  # Show main content after "Start OCR"
-#         else:
-#             st.write("Click 'Start OCR' to begin processing your documents.")
+        display_ocr_content()
